@@ -1,0 +1,4 @@
+name = OS2Web Settings Page
+description = OS2Web settings page in administration. This module adds a dummy settings page as replacement for the os2web_settings module.
+core = 7.x
+package = OS2Web - Backend

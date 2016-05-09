@@ -1,0 +1,54 @@
+<?php
+
+/**
+ * @file
+ * Settings page for configuration of the  different OS2Web modules
+ * and features.
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function os2web_settings_page_permission() {
+  return array(
+    'administer os2web' => array(
+      'title' => t('Administer OS2Web'),
+      'description' => t('Access settings and administration pages for OS2Web')
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function os2web_settings_page_menu() {
+  $items['admin/config/os2web'] = array(
+    'title' => 'OS2Web Setup',
+    'description' => 'Set up OS2Web services',
+    'position' => 'right',
+    'weight' => -15,
+    'access arguments' => array('administer os2web'),
+    'page callback' => 'system_admin_menu_block_page',
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+  $items['admin/config/os2web/settings'] = array(
+    'title' => 'OS2Web Settings',
+    'description' => t('General settings for the OS2Web project'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('os2web_settings_settings_form'),
+    'access arguments' => array('administer os2web'),
+    'type' => MENU_NORMAL_ITEM | MENU_DEFAULT_LOCAL_TASK,
+
+  );
+  return $items;
+}
+
+/**
+ * General settings form for OS2Web related settings.
+ */
+function os2web_settings_settings_form($form, $form_state) {
+  $form['dummy'] = array();
+  return system_settings_form($form);
+}
+

@@ -1,0 +1,145 @@
+# $Id$
+#
+# Danish translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  os2web_subscription.module: n/a
+#  os2web_subscription.info: n/a
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2014-01-21 16:10+0100\n"
+"PO-Revision-Date: 2014-01-21 16:10+0100\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Danish <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: os2web_subscription.module:77
+msgid "Enabled node types for Subscriptions"
+msgstr ""
+
+#: os2web_subscription.module:78
+msgid "Choose which content types should be enabled for subscribers to get notified of."
+msgstr ""
+
+#: os2web_subscription.module:98
+msgid "Categories title"
+msgstr ""
+
+#: os2web_subscription.module:99
+msgid "Choose the title of this type of subscription. This is shown to end users. eg. for a content type of os2web_news it could be \"News\"."
+msgstr ""
+
+#: os2web_subscription.module:160
+msgid "OS2web Subscriptions - Add subscription"
+msgstr ""
+
+#: os2web_subscription.module:196;278
+msgid "Your Email"
+msgstr ""
+
+#: os2web_subscription.module:203
+msgid "Your subscriptions"
+msgstr ""
+
+#: os2web_subscription.module:204
+msgid "Choose which of the categories you want to be notified of. When new content of a particular category is created, you will recieve an email."
+msgstr ""
+
+#: os2web_subscription.module:217
+msgid "Save subscriptions"
+msgstr ""
+
+#: os2web_subscription.module:257;332
+msgid "You are now registered. You will soon recieve and email with a link to confirm your registration."
+msgstr ""
+
+#: os2web_subscription.module:279
+msgid "Subscribe to this type of content."
+msgstr ""
+
+#: os2web_subscription.module:280
+msgid "Subscribe to !category by entering your Email and submit. When new content of a this type is created, you will recieve an email"
+msgstr ""
+
+#: os2web_subscription.module:288
+msgid "Save subscription"
+msgstr ""
+
+#: os2web_subscription.module:306
+msgid "Please enter a valid email address."
+msgstr ""
+
+#: os2web_subscription.module:405
+msgid "New \"!category\" notification for !email from !sitename"
+msgstr ""
+
+#: os2web_subscription.module:410
+msgid "Greetings !email, this is a notification about new content from !sitename."
+msgstr ""
+
+#: os2web_subscription.module:415
+msgid "Links below leads you to the original content."
+msgstr ""
+
+#: os2web_subscription.module:422;447
+msgid "This is an automatic e-mail from !sitename."
+msgstr ""
+
+#: os2web_subscription.module:424
+msgid "To stop receiving notifications for \"!category\", click the opt-out link: <a href=\"!notify-url\">"
+msgstr ""
+
+#: os2web_subscription.module:428
+msgid "Stop all emails from the subscription service by clicking: <a href=\"!notify-url\">"
+msgstr ""
+
+#: os2web_subscription.module:436
+msgid "Confirm your !category registration on !sitename"
+msgstr ""
+
+#: os2web_subscription.module:440
+msgid "Greetings !email, to confirm your registration to !category notifications, please click the link below."
+msgstr ""
+
+#: os2web_subscription.module:378;381
+msgid "os2web_subscription"
+msgstr ""
+
+#: os2web_subscription.module:378
+msgid "%mail notified successfully."
+msgstr ""
+
+#: os2web_subscription.module:381
+msgid "%mail could not be notified. Mail error."
+msgstr ""
+
+#: os2web_subscription.module:15;23;32;49 os2web_subscription.info:0
+msgid "OS2Web Subscriptions"
+msgstr ""
+
+#: os2web_subscription.module:41
+msgid "Get notifications to your email."
+msgstr ""
+
+#: os2web_subscription.module:50
+msgid "General settings"
+msgstr ""
+
+#: os2web_subscription.module:60
+msgid "OS2web Subscriptions"
+msgstr ""
+
+#: os2web_subscription.module:61
+msgid "Change settings for Subscriptions"
+msgstr ""
+
+#: os2web_subscription.info:0
+msgid "OS2Web - Frontend"
+msgstr ""
+

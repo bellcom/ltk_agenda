@@ -1,0 +1,332 @@
+<?php
+/**
+ * @file
+ * Code for the OS2Web Meetings feature.
+ */
+
+include_once 'os2web_meetings.features.inc';
+
+/**
+ * Implements hook_cron().
+ *
+ * Used to update search data on updated meetings.
+ */
+function os2web_meetings_cron() {
+  $current_time = time();
+  $last_run_time = variable_get('os2web_meetings_last_search_index_time', 0);
+
+  if ($last_run_time < $current_time) {
+    // Fetching meetings changed after the last cron run.
+    $query = new EntityFieldQuery();
+    $result = $query->entityCondition('entity_type', 'node')
+      ->propertyCondition('type', 'os2web_meetings_meeting')
+      ->propertyCondition('changed', $last_run_time, '>')
+      ->execute();
+    if (isset($result['node'])) {
+      $nids = array_keys($result['node']);
+      $meetings = entity_load('node', $nids);
+
+      // If queue is empty are we adding the changed meetings to it.
+      $queue = DrupalQueue::get('os2web_meetings_search_index');
+      if ($queue->numberOfItems() == 0) {
+        foreach ($meetings as $meeting) {
+          $queue->createItem(array('meeting' => $meeting));
+        }
+      }
+    }
+
+    variable_set('os2web_meetings_last_search_index_time', $current_time);
+  }
+}
+
+/**
+ * Implements hook_cron_queue_info().
+ */
+function os2web_meetings_cron_queue_info() {
+  $queues['os2web_meetings_search_index'] = array(
+    'worker callback' => 'os2web_meetings_cron_queue_worker',
+  );
+  return $queues;
+}
+
+/**
+ * Cron queue worker callback.
+ */
+function os2web_meetings_cron_queue_worker($args) {
+  if (isset($args['meeting'])) {
+    os2web_meetings_update_search_index($args['meeting']);
+  }
+}
+
+/**
+ * Creating the search data for a specific meeting and updating on the meeting.
+ *
+ * @param object $meeting
+ *   The full meeting entity object.
+ */
+function os2web_meetings_update_search_index($meeting) {
+  $entity_type = 'node';
+
+  // Fetching data from each bullet point attached to the meeting,
+  // and merging bullet titles and bullet point attachment bodys
+  // into one searchable text string.
+  $bullet_point_data = '';
+  $bullet_points = field_get_items($entity_type, $meeting, 'field_os2web_meetings_bullets');
+  if (is_array($bullet_points)) {
+    foreach ($bullet_points as $bullet_point) {
+      $bullet_point_node = node_load($bullet_point['target_id']);
+      if ($bullet_point_node) {
+        $text = strip_tags(check_markup($bullet_point_node->title, 'plain_text'));
+        $bullet_point_data .= ' ' . $text;
+
+        $attachments = field_get_items($entity_type, $bullet_point_node, 'field_os2web_meetings_attach');
+        if (is_array($attachments)) {
+          foreach ($attachments as $attachment) {
+            $attachment_node = node_load($attachment['target_id']);
+            $body = field_get_items($entity_type, $attachment_node, 'field_os2web_meetings_bpa_body');
+            $body = $body[0]['value'];
+            $text = strip_tags(check_markup($body, 'filtered_html'));
+            $text = trim(preg_replace('/[\",;:.\'\(\)]/', ' ', $text));
+            $text = trim(preg_replace('/\s\s+/', ' ', $text));
+            $bullet_point_data .= ' ' . $text;
+          }
+        }
+      }
+    }
+  }
+
+  // Extract keywords so only relevant words are stored.
+  $text = mb_split('\s+', $bullet_point_data);
+  $text = array_keys(array_flip($text));
+  $text = array_filter($text, 'os2web_meetings_strip_words');
+  $bullet_point_data = implode(' ', $text);
+
+  // Updating node with the updated search data.
+  $node = node_load($meeting->nid);
+  $node->field_os2web_meetings_searchdata['und'][0]['value'] = $bullet_point_data;
+  node_save($node);
+}
+
+/**
+ * Helper function which removes common and small (<2 chars) words.
+ *
+ * @param string $text
+ *   The text which should be processed.
+ *
+ * @return bool
+ *   Returns TRUE if the processed text is longer than 3 chars.
+ */
+function os2web_meetings_strip_words($text) {
+  $text = preg_replace('/^[^\w|\d|æ|ø|å]+/', '', $text);
+  $text = preg_replace('/[^\w|\d|æ|ø|å]+$/', '', $text);
+  if (strlen($text) > 3) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ *
+ * Add any newly created published meetings to the queue with category as the
+ * meeting committee.
+ * See module os2web_subscription.
+ */
+function os2web_meetings_node_insert($node) {
+  if ($node->status == 1 &&
+      $node->type === 'os2web_meetings_meeting' &&
+      function_exists('os2web_subscription_add_to_queue')) {
+    $field_meetings_type = field_get_items('node', $node, 'field_os2web_meetings_type');
+    $type = $field_meetings_type[0]['value'];
+    if (($type === 'Dagsorden' && variable_get('os2web_meetings_subscription_first_dagsorden', FALSE)) ||
+        ($type === 'Referat' && variable_get('os2web_meetings_subscription_first_referat', FALSE)) ) {
+      _os2web_meetings_os2web_subscription_add($node);
+    }
+  }
+}
+
+/**
+ * Implements hook_node_update().
+ *
+ * When meetings are upgraded to an "Referat", add the node to the Subscription
+ * Queue again. This way any subscribers will get notified on the update.
+ * See module os2web_subscription.
+ */
+function os2web_meetings_node_update($node) {
+  if ($node->status == 1 &&
+      $node->type === 'os2web_meetings_meeting' &&
+      function_exists('os2web_subscription_add_to_queue')) {
+
+    $old = $node->original;
+
+    $field_meetings_type = field_get_items('node', $node, 'field_os2web_meetings_type');
+    $field_meetings_subid = field_get_items('node', $node, 'field_os2web_meetings_system_id');
+    $type = $field_meetings_type[0]['value'];
+    $subid = $field_meetings_subid[0]['value'];
+
+    $old_field_meetings_type = field_get_items('node', $old, 'field_os2web_meetings_type');
+    $old_field_meetings_subid = field_get_items('node', $old, 'field_os2web_meetings_system_id');
+    $old_type = $old_field_meetings_type[0]['value'];
+    $old_subid = $old_field_meetings_subid[0]['value'];
+
+    // Determine if this meeting should get queued for email. This is handled by
+    // multiple rules.
+    if (($type === 'Dagsorden' && $subid > $old_subid && variable_get('os2web_meetings_subscription_new_dagsorden', FALSE)) ||
+        ($type === 'Referat' && $old_type === 'Dagsorden' && variable_get('os2web_meetings_subscription_first_referat', FALSE)) ||
+        ($type === 'Referat' && $subid > $old_subid && variable_get('os2web_meetings_subscription_new_referat', FALSE))) {
+
+      _os2web_meetings_os2web_subscription_add($node);
+    }
+    else {
+      os2web_subscription_delete_from_queue($node->nid);
+    }
+  }
+}
+
+/**
+ * Helper function to add a meeting to the subscription queue.
+ */
+function _os2web_meetings_os2web_subscription_add($node) {
+  if ($node->status == 1 &&
+      $node->type === 'os2web_meetings_meeting' &&
+      function_exists('os2web_subscription_add_to_queue')) {
+
+    $dates = field_get_items('node', $node, 'field_os2web_meetings_date');
+    $date = array_shift($dates);
+    $date = new DateTime($date['value']);
+    // Only add to subscription queue if meeting date is younger than xx days from now.
+    if ($date->diff(new DateTime('now'))->days < variable_get('os2web_meetings_subscription_max_age', 10)) {
+      // Add it to the master meeting type queue.
+      $enabled_node_types = os2web_subscription_get_node_types();
+      if (in_array($node->type, $enabled_node_types)) {
+        // If the meetings category is enabled, add it to the queue.
+        os2web_subscription_add_to_queue($node->nid, $node->type);
+      }
+
+      $meeting_type = field_get_items('node', $node, 'field_os2web_meetings_committee');
+      if (!empty($meeting_type[0]['tid'])) {
+        os2web_subscription_add_to_queue($node->nid, 'os2web_meetings_meeting-type_' . $meeting_type[0]['tid']);
+      }
+    }
+    else {
+      os2web_subscription_delete_from_queue($node->nid);
+    }
+  }
+}
+
+/**
+ * Implements hook_os2web_subscription_categories().
+ * See module os2web_subscription.
+ */
+function os2web_meetings_os2web_subscription_categories() {
+  $subscription_type_array = &drupal_static(__FUNCTION__);
+  if (!isset($subscription_type_array)) {
+
+    // Return alle types of meetings. These types are grapped from the commitee
+    // vocabulary.
+    $vocabulary = taxonomy_vocabulary_machine_name_load('os2web_meetings_tax_committee');
+    $subscription_type_array = array();
+    $types = taxonomy_get_tree($vocabulary->vid);
+    foreach ($types as $type) {
+      $subscription_type_array['os2web_meetings_meeting-type_' . $type->tid] = 'os2web_meetings_meeting-type_' . $type->tid;
+
+      // If there are no title for the meeting type, use the name of the committee.
+      if (!variable_get('os2web_subscription_title_os2web_meetings_meeting-type_' . $type->tid, FALSE)) {
+        variable_set('os2web_subscription_title_os2web_meetings_meeting-type_' . $type->tid, t('Meeting: !name', array('!name' => $type->name)));
+      }
+    }
+
+    // Add the meeting node type to the categories array. This is handled by us,
+    // and not the os2web_subscription module.
+    $subscription_type_array[] = 'os2web_meetings_meeting';
+  }
+
+  return $subscription_type_array;
+}
+
+/**
+ * Implements hook_page_alter().
+ *
+ * Add a subscription form to the overview page at /dagsorden-og-referat.
+ * See module os2web_subscription.
+ */
+function os2web_meetings_page_alter(&$page) {
+
+  // Only add subscription form, if meeting settings are set.
+  if (!variable_get('os2web_meetings_subscription_first_dagsorden', FALSE) &&
+      !variable_get('os2web_meetings_subscription_new_dagsorden', FALSE) &&
+      !variable_get('os2web_meetings_subscription_first_referat', FALSE) &&
+      !variable_get('os2web_meetings_subscription_new_referat', FALSE)) {
+    return;
+  }
+
+  // If the OS2web Subscription module are enabled, add a subscribe form.
+  if (module_exists('os2web_subscription') &&
+      request_path() === 'dagsorden-og-referat') {
+
+    $subscription_types = array();
+
+    // Add the default meeting node type to the form.
+    $subscription_types[] = 'os2web_meetings_meeting';
+
+    // Add all types of meetings (committees).
+    $vocabulary = taxonomy_vocabulary_machine_name_load('os2web_meetings_tax_committee');
+    $subscription_type_array = array();
+    $types = taxonomy_get_tree($vocabulary->vid);
+    foreach ($types as $type) {
+      $subscription_types[] = 'os2web_meetings_meeting-type_' . $type->tid;
+    }
+
+    if (!empty($subscription_types)) {
+      $page['content'][] = drupal_get_form('os2web_subscription_add_subscription_form', $subscription_types, t('Subscribe to meetings'));
+    }
+  }
+}
+
+/**
+ * Implements hook_FORM_alter();
+ */
+function os2web_meetings_form_alter(&$form, &$form_state) {
+  // Alter the OS2web Subscription settings form. Add some Meeting specific
+  // configurations.
+  if ($form['#id'] === 'os2web-subscription-settings-form') {
+    $form['os2web_subscription_os2web_meetings_settings'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('OS2web Meetings integration'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['os2web_subscription_os2web_meetings_settings']['os2web_meetings_subscription_max_age'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Maximum age in days of a meeting when sending a email on reimport etc. default 10 days.'),
+      '#default_value' => variable_get('os2web_meetings_subscription_max_age', 10),
+      '#element_validate' => array('element_validate_integer_positive'),
+    );
+    $form['os2web_subscription_os2web_meetings_settings']['os2web_meetings_subscription_first_dagsorden'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Adviser ved første import af en dagsorden.'),
+      '#default_value' => variable_get('os2web_meetings_subscription_first_dagsorden', FALSE),
+    );
+    $form['os2web_subscription_os2web_meetings_settings']['os2web_meetings_subscription_new_dagsorden'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Adviser ved alle nye versioner af en dagsorden.'),
+      '#default_value' => variable_get('os2web_meetings_subscription_new_dagsorden', FALSE),
+    );
+    $form['os2web_subscription_os2web_meetings_settings']['os2web_meetings_subscription_first_referat'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Adviser ved første import af et referat.'),
+      '#default_value' => variable_get('os2web_meetings_subscription_first_referat', FALSE),
+    );
+    $form['os2web_subscription_os2web_meetings_settings']['os2web_meetings_subscription_new_referat'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Adviser ved alle nye versioner af et referat.'),
+      '#default_value' => variable_get('os2web_meetings_subscription_new_referat', FALSE),
+    );
+
+    // Unset the default meeting node type from the os2web_subscription module.
+    // We add it directly from hook_os2web_subscription_categories hook.
+    unset($form['os2web_subscription_enabled_types_group']['os2web_subscription_node_type_os2web_meetings_meeting']);
+  }
+}

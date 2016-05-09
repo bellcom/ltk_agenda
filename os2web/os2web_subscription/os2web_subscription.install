@@ -1,0 +1,107 @@
+<?php
+/**
+ * @file
+ * Install schema etc. for the os2web subscription module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function os2web_subscription_schema() {
+  $schema['os2web_subscription_subscriptions'] = array(
+    'description' => 'Keeps track of emails which have subscriptions to any categories/content types.',
+    'fields' => array(
+      'email' => array(
+        'description' => 'The email of the subscriber.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'category' => array(
+        'description' => 'The category of the subscriptions. Can be content types or simple categories.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'code' => array(
+        'description' => 'The "private" code for this subscription.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'status' => array(
+        'description' => 'Boolean indicating whether the email is confirmed.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'last_updated' => array(
+        'type' => 'datetime',
+        'mysql_type' => 'datetime',
+      ),
+    ),
+    'unique keys' => array(
+      'code' => array('code'),
+    ),
+    'primary key' => array('email', 'category'),
+  );
+  $schema['os2web_subscription_queue'] = array(
+    'description' => 'Keeps track of new nodes which in queue to be emailed.',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The node nid.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+      ),
+      'category' => array(
+        'description' => 'The category of the subscriptions. Can be content types or simple categories.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'last_updated' => array(
+        'type' => 'datetime',
+        'mysql_type' => 'datetime',
+      ),
+    ),
+    'primary key' => array('nid', 'category'),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function os2web_subscription_uninstall() {
+  // Remove all variables.
+  foreach (node_type_get_types() as $type => $name) {
+    variable_del('os2web_subscription_node_type_' . $type);
+  }
+
+  // Get enabled categories from all modules, and delete its variable.
+  // TODO: What about disabled categories which already has set a title?
+  $categories = module_invoke_all('os2web_subscription_categories');
+  foreach ($categories as $category) {
+    variable_del('os2web_subscription_title_' . $type);
+  }
+}
+
+/**
+ * Implements hook_enable().
+ */
+function os2web_subscription_enable() {
+  // Set mail system for this module to use its own mail class.
+  $current = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));
+  $addition = array('os2web_subscription' => 'Os2webSubscriptionMailSystem');
+  variable_set('mail_system', array_merge($current, $addition));
+}
+
+/**
+ * Implements hook_disable().
+ */
+function os2web_subscription_disable() {
+  // Reset mail system to default.
+  $mail_system = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));
+  unset($mail_system['os2web_subscription']);
+  variable_set('mail_system', $mail_system);
+}

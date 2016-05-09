@@ -1,0 +1,145 @@
+# $Id$
+#
+# Danish translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  os2web_subscription.module: n/a
+#  os2web_subscription.info: n/a
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2014-01-21 16:10+0100\n"
+"PO-Revision-Date: 2014-01-21 16:10+0100\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Danish <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: os2web_subscription.module:77
+msgid "Enabled node types for Subscriptions"
+msgstr "Aktiverede node typer som kan tilmeldes til"
+
+#: os2web_subscription.module:78
+msgid "Choose which content types should be enabled for subscribers to get notified of."
+msgstr "Vælg hvilke node typer der skal være aktiverede for besøgende."
+
+#: os2web_subscription.module:98
+msgid "Categories title"
+msgstr "Kategori titler"
+
+#: os2web_subscription.module:99
+msgid "Choose the title of this type of subscription. This is shown to end users. eg. for a content type of os2web_news it could be \"News\"."
+msgstr "Vælg den titel til denne type tilmelding. Disse titler er vist til slut brugere. Fx. for en node type af type os2web_news kan titlen være \"Nyheder\"."
+
+#: os2web_subscription.module:160
+msgid "OS2web Subscriptions - Add subscription"
+msgstr "OS2web Tilmeldinger - Tilføj tilmelding"
+
+#: os2web_subscription.module:196;278
+msgid "Your Email"
+msgstr "Din Email"
+
+#: os2web_subscription.module:203
+msgid "Your subscriptions"
+msgstr "Dine tilmeldinger"
+
+#: os2web_subscription.module:204
+msgid "Choose which of the categories you want to be notified of. When new content of a particular category is created, you will recieve an email."
+msgstr "Vælg hvilke kategorier du gerne vil modtage notifikationer fra. Når nyt indhold fra en kategorí er oprettet, vil du modtage en mail."
+
+#: os2web_subscription.module:217
+msgid "Save subscriptions"
+msgstr "Gem Tilmeldinger"
+
+#: os2web_subscription.module:257;332
+msgid "You are now registered. You will soon recieve and email with a link to confirm your registration."
+msgstr "Du er nu oprettet. Du vil snarest modtage en email med et link til at bekræfte din tilmelding."
+
+#: os2web_subscription.module:279
+msgid "Subscribe to !category"
+msgstr "Abonner på !category"
+
+#: os2web_subscription.module:280
+msgid "Subscribe to !category by entering your Email and submit. When new content of a this type is created, you will recieve an email"
+msgstr "Vil du abonnere på !category? – Tilmeld dig vores automatisk nyhedsmail - så får du en mail hver gang siden opdateres."
+
+#: os2web_subscription.module:288
+msgid "Save subscription"
+msgstr "Gem Tilmelding"
+
+#: os2web_subscription.module:306
+msgid "Please enter a valid email address."
+msgstr "Du skal angive en gyldig Email"
+
+#: os2web_subscription.module:405
+msgid "New \"!category\" notification for !email from !sitename"
+msgstr "Ny \"!category\" besked til !email fra !sitename"
+
+#: os2web_subscription.module:410
+msgid "Greetings !email, this is a notification about new content from !sitename."
+msgstr "Hej !email, der er oprettet nyt indhold på !sitename."
+
+#: os2web_subscription.module:415
+msgid "Links below leads you to the original content."
+msgstr "Se det nye indhold ved at følge linksne herunder."
+
+#: os2web_subscription.module:422;447
+msgid "This is an automatic e-mail from !sitename."
+msgstr "Dette er en automatisk Email fra !sitename."
+
+#: os2web_subscription.module:424
+msgid "To stop receiving notifications for \"!category\", click the opt-out link: <a href=\"!notify-url\">"
+msgstr "Afmeld dig beskeder fra kategorien \"!category\", klik på afmeld linket: <a href=\"!notify-url\">"
+
+#: os2web_subscription.module:428
+msgid "Stop all emails from the subscription service by clicking: <a href=\"!notify-url\">"
+msgstr "Stop alle emails fra servicen ved at klikke: <a href=\"!notify-url\">"
+
+#: os2web_subscription.module:436
+msgid "Confirm your !category registration on !sitename"
+msgstr "Bekræft din tilmelding til kategorien !category på !sitename"
+
+#: os2web_subscription.module:440
+msgid "Greetings !email, to confirm your registration to !category notifications, please click the link below."
+msgstr "Hej !email, for at kunne bekræfte din tilmelding til beskeder fra !category, følg venligst linket nedenunder."
+
+#: os2web_subscription.module:378;381
+msgid "os2web_subscription"
+msgstr ""
+
+#: os2web_subscription.module:378
+msgid "%mail notified successfully."
+msgstr ""
+
+#: os2web_subscription.module:381
+msgid "%mail could not be notified. Mail error."
+msgstr ""
+
+#: os2web_subscription.module:15;23;32;49 os2web_subscription.info:0
+msgid "OS2Web Subscriptions"
+msgstr ""
+
+#: os2web_subscription.module:41
+msgid "Get notifications to your email."
+msgstr "Få beskeder direkte til din email."
+
+#: os2web_subscription.module:50
+msgid "General settings"
+msgstr ""
+
+#: os2web_subscription.module:60
+msgid "OS2web Subscriptions"
+msgstr ""
+
+#: os2web_subscription.module:61
+msgid "Change settings for Subscriptions"
+msgstr ""
+
+#: os2web_subscription.info:0
+msgid "OS2Web - Frontend"
+msgstr ""
+
